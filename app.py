@@ -13,15 +13,30 @@ from utils.questions import questions
 from utils.test_manager import TestManager
 
 
+def resource_path(relative_path):
+    """Get absolute path to resource, works for dev and for PyInstaller.
+
+    - Референс: https://stackoverflow.com/a/13790741
+    """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
+
 class TestApp(QMainWindow, main.Ui_MainWindow):
     """Главный класс приложения-теста"""
 
     def __init__(self):
         """Метод инициализации интерфейса"""
         super().__init__()
-        QFontDatabase.addApplicationFont('fonts/circe.ttf')
-        QFontDatabase.addApplicationFont('fonts/circe-bold.ttf')
-        QFontDatabase.addApplicationFont('fonts/circe-extrabold.ttf')
+        QFontDatabase.addApplicationFont(resource_path('fonts/circe.ttf'))
+        QFontDatabase.addApplicationFont(resource_path('fonts/circe-bold.ttf'))
+        QFontDatabase.addApplicationFont(
+            resource_path('fonts/circe-extrabold.ttf'))
         self.setupUi(self)
 
         # Создание менеджера работы с тестом
