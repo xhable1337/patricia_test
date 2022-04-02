@@ -1,7 +1,7 @@
 import os
+import sys
 from functools import partial
 from random import choice
-from sys import argv
 
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtGui import QFontDatabase
@@ -66,9 +66,10 @@ class TestApp(QMainWindow, main.Ui_MainWindow):
 
     def select_unanswered(self):
         """Колбек для перехода к неотвеченному вопросу."""
-        self.set_question(
-            choice(self.test.unanswered_questions)
-        )
+        if not self.test.is_completed:
+            self.set_question(
+                choice(self.test.unanswered_questions)
+            )
 
     def reset_time(self):
         """Сброс таймера"""
@@ -147,23 +148,38 @@ class TestApp(QMainWindow, main.Ui_MainWindow):
     def next_question(self, answered: bool = False):
         """Колбек для кнопки следующего вопроса"""
 
-        if self.test.current_question_index != len(self.test.questions) - 1:
-            # Если текущий вопрос не последний в списке
+        if answered and self.test.is_completed:
             self.set_question(
-                self.test.questions[self.test.current_question_index + 1]
+                self.test.questions[0]
             )
-        else:
-            # Если текущий вопрос последний в списке
-            self.toggle_buttons(True)
+            return self.finish_test()
 
         if self.test.is_completed:
             # Если ответы есть на все вопросы
             # Если текущий вопрос последний без ответа
-            self.set_question(
-                self.test.questions[0]
-            )
-            print('test is completed...')
-            self.finish_test()
+            if self.test.current_question != self.test.questions[-1]:
+                self.set_question(
+                    self.test.questions[self.test.current_question_index + 1]
+                )
+            else:
+                self.set_question(
+                    self.test.questions[0]
+                )
+                self.finish_test()
+        else:
+            if self.test.current_question_index != len(self.test.questions) - 1:
+                # Если текущий вопрос не последний в списке
+                self.set_question(
+                    self.test.questions[self.test.current_question_index + 1]
+                )
+                if self.test.is_completed:
+                    self.set_question(
+                        self.test.questions[0]
+                    )
+                    self.finish_test()
+            else:
+                # Если текущий вопрос последний в списке
+                self.toggle_buttons(True)
 
     def prev_question(self):
         """Колбек для кнопки предыдущего вопроса"""
@@ -223,7 +239,7 @@ class TestApp(QMainWindow, main.Ui_MainWindow):
             'Выход', QtWidgets.QMessageBox.ResetRole
         )
         exit_btn.clicked.disconnect()
-        exit_btn.clicked.connect(partial(exit, 0))
+        exit_btn.clicked.connect(sys.exit)
 
         return msg.exec()
 
@@ -243,7 +259,7 @@ class TestApp(QMainWindow, main.Ui_MainWindow):
 
 
 def main():
-    app = QApplication(argv)
+    app = QApplication(sys.argv)
     window = TestApp()
     window.show()
     app.exec_()
